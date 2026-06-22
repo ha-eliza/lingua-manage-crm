@@ -1,0 +1,1 @@
+# lingua-manage-crm

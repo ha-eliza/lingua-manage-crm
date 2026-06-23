@@ -1,0 +1,10 @@
+@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..700&display=swap');
+
+@theme {
+  --color-brand-primary: #000039;
+  --color-brand-accent: #E0F2FE;
+  --color-brand-accent-text: #0369A1;
+  --color-brand-bg: #F8FAFC;
+  --color-brand-text: #1E293B;
+}

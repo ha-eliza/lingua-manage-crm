@@ -1,0 +1,117 @@
+.layout {
+  display: flex;
+  min-height: 100vh;
+  width: 100vw;
+  background-color: #f9f9f9;
+  overflow-x: hidden;
+  font-family: "Space Grotesk";
+}
+
+/* Базовые стили сайдбара */
+.sidebar {
+  width: 200px;
+  min-width: 200px;
+  background-color: #fff;
+  border-right: 1px solid #e5e5e5;
+  padding: 24px 16px;
+  display: flex;
+  flex-direction: column;
+  transition: all 0.3s ease-in-out;
+}
+
+/* СТИЛИ ДЛЯ СВЕРНУТОГО СОСТОЯНИЯ */
+.sidebar.collapsed {
+  width: 80px;
+  min-width: 80px;
+  padding: 24px 8px;
+}
+
+/* Центрируем иконки в свернутом режиме */
+.sidebar.collapsed .menu-link {
+  justify-content: center;
+}
+
+/* Скрываем текст ссылок при сворачивании */
+.sidebar.collapsed .link-text {
+  display: none;
+}
+
+/* Центрируем логотип при сворачивании */
+.sidebar.collapsed .logo {
+  text-align: center;
+  font-size: 18px;
+}
+
+.toggle-btn {
+  padding: 10px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s;
+}
+.toggle-btn:hover {
+  background-color: #f3f3f3;
+}
+
+.logo {
+  font-size: 22px;
+  font-weight: 700;
+  margin-bottom: 40px;
+  padding: 0 10px;
+}
+
+.menu {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.menu-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 20px;
+  color: #666;
+  text-decoration: none;
+  border-radius: 12px;
+  transition: all 0.2s ease;
+}
+
+.menu-link:hover {
+  background-color: #f3f3f3;
+  color: #000;
+}
+
+.menu-link.active {
+  background-color: color-mix(in srgb, var(--color-brand-accent) 50%, transparent);
+  color: #000;
+  font-weight: 600;
+}
+
+/* ПРАВАЯ ОБЛАСТЬ */
+.main-wrapper {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.header {
+  height: 70px;
+  background-color: var(--color-brand-primary);
+  border-bottom: 1px solid #e5e5e5;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 40px;
+}
+
+.content {
+  padding: 40px;
+  flex: 1;
+}
+
+.ant-modal-title {
+  font-size: 20px !important;
+}

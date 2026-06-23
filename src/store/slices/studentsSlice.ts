@@ -1,5 +1,5 @@
 import type { StateCreator } from 'zustand';
-import type { Student, StudentStatus } from '../../types';
+import type { EnglishLevel, Student, StudentStatus } from '../../types';
 import { mockStudents } from '../../types/mockData';
 import type { AppState } from '../useAppStore';
 
@@ -8,6 +8,7 @@ export interface StudentsSlice {
   addStudent: (studentData: Omit<Student, 'id' | 'role' | 'avatarColor' | 'login'>) => void;
   deleteStudent: (id: string) => void;
   updateStudentStatus: (id: string, status: StudentStatus) => void;
+  updateStudentLevel: (id: string, level: EnglishLevel) => void;
 }
 
 const getRandomColor = () => {
@@ -42,11 +43,19 @@ export const createStudentsSlice: StateCreator<AppState, [['zustand/persist', un
       students: state.students.filter((student) => student.id !== id),
     })),
 
-  // Функция обновления
+  // Функция обновления статуса
   updateStudentStatus: (id, status) =>
     set((state) => ({
       students: state.students.map((student) =>
         student.id === id ? { ...student, status } : student
+      ),
+    })),
+
+  // Функция обновления уровня
+  updateStudentLevel: (id, level) =>
+    set((state) => ({
+      students: state.students.map((student) =>
+        student.id === id ? { ...student, level } : student
       ),
     })),
 

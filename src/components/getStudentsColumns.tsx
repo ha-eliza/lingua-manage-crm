@@ -10,10 +10,12 @@ import type { Student, EnglishLevel, StudentStatus } from "../types";
 
 interface ColumnsProps {
   deleteStudent: (id: string) => void;
+  navigate: (path: string) => void;
 }
 
 export const getStudentsColumns = ({
   deleteStudent,
+  navigate
 }: ColumnsProps): TableColumnsType<Student> => [
   {
     title: "Студент",
@@ -90,6 +92,12 @@ export const getStudentsColumns = ({
     key: "actions",
     render: (_: unknown, record: Student) => (
       <div className="flex gap-2">
+        <Button
+          type="text"
+          icon={<RightCircleOutlined style={{ fontSize: '18px', color: '#1E3A8A' }} />}
+          onClick={() => navigate(`/profile/${record.id}`)} // Передаем ID
+          title="Открыть профиль студента"
+        />
         <Popconfirm
           title="Удалить студента?"
           description="Это действие полностью удалит студента из базы."
@@ -102,7 +110,6 @@ export const getStudentsColumns = ({
         >
           <Button type="text" danger icon={<DeleteOutlined />} />
         </Popconfirm>
-        <RightCircleOutlined />
       </div>
     ),
   },

@@ -4,8 +4,10 @@ import { PlusOutlined, SearchOutlined, UserOutlined } from "@ant-design/icons";
 import { useAppStore } from "../store/useAppStore";
 import { getStudentsColumns } from "../components/getStudentsColumns";
 import type { EnglishLevel } from "../types";
+import { useNavigate } from "react-router";
 
 export const StudentsPage: React.FC = () => {
+  const navigate = useNavigate();
   // 1. Забираем данные из Zustand
   const students = useAppStore((state) => state.students);
   const addStudent = useAppStore((state) => state.addStudent);
@@ -17,7 +19,7 @@ export const StudentsPage: React.FC = () => {
   const [form] = Form.useForm();
 
   // 2. Колонки таблицы
-  const columns = getStudentsColumns({ deleteStudent });
+  const columns = getStudentsColumns({ deleteStudent, navigate });
 
   // 3. Обработка создания студента из формы
   const handleFormSubmit = (values: {name: string; email: string; level: EnglishLevel}) => {

@@ -113,7 +113,7 @@ function App() {
           </div>
         </header>
 
-        <main className="m-5 bg-white rounded-xl h-full p-7">
+        <main className="m-5 bg-white rounded-xl p-7" style={{height: 'calc(100vh - 70px - 40px)'}}>
           <Outlet />
         </main>
       </div>

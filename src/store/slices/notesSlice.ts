@@ -9,6 +9,7 @@ export interface NotesSlice {
   addNote: (noteData: Omit<Note, "id" | "completed" | "createdAt" | "completedAt">) => void;
   deleteNote: (id: string) => void;
   toggleNoteComplete: (id: string) => void;
+  updatedNote: (id: string, newDeadline: string) => void;
 }
 
 export const createNotesSlice: StateCreator<AppState, [["zustand/persist", unknown]], [], NotesSlice> = (set) => ({
@@ -46,5 +47,18 @@ export const createNotesSlice: StateCreator<AppState, [["zustand/persist", unkno
   deleteNote: (id) =>
     set((state) => ({
       notes: state.notes.filter((note) => note.id !== id)
+    })),
+
+  updatedNote: (id, newDeadline) =>
+    set((state) => ({
+      notes: state.notes.map((note) => {
+        if (note.id === id) {
+          return {
+            ...note,
+            deadline: newDeadline,
+          };
+        }
+        return note;
+      }),
     }))
 })

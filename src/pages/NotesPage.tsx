@@ -11,6 +11,7 @@ import {
   Form,
   Input,
   message,
+  Modal,
   Popconfirm,
   Radio,
 } from "antd";
@@ -18,14 +19,18 @@ import dayjs from "dayjs";
 import { useAppStore } from "../store/useAppStore";
 import styles from "./Notes.module.css";
 import type { Note } from "../types";
+import { useState } from "react";
 
 export const NotesPage = () => {
   const notes = useAppStore((state) => state.notes);
   const addNote = useAppStore((state) => state.addNote);
   const deleteNote = useAppStore((state) => state.deleteNote);
   const toggleNoteComplete = useAppStore((state) => state.toggleNoteComplete);
+  const updatedNote = useAppStore((state) => state.updatedNote);
 
   const [form] = Form.useForm();
+  const [isOpenModal, setIsOpenModal] = useState<string | null>(null); // хранит строку с идентификатором задачи
+  const [newDeadline, setNewDeadline] = useState<dayjs.Dayjs | null>(null); // хранит ту дату, которую выбрал пользователь
 
   const handleFormSubmit = (values: any) => {
 
@@ -41,6 +46,20 @@ export const NotesPage = () => {
     message.success("Заметка добавлена!");
 
     form.resetFields();
+  };
+
+  const handleUpdatedNote = () => {
+    if (isOpenModal && newDeadline) {
+      // Передаем в стор ID задачи и отформатированную дату в виде строки
+      updatedNote(isOpenModal, newDeadline.format("YYYY-MM-DD"));
+      message.success("Срок выполнения успешно изменен!");
+
+      // Закрываем модальное окно и сбрасываем стейты
+      setIsOpenModal(null);
+      setNewDeadline(null);
+    } else {
+      message.warning("Пожалуйста, выберите дату!");
+    }
   };
 
   return (
@@ -204,10 +223,18 @@ export const NotesPage = () => {
 
                         {!note.completed && (
                           <div className={styles.actions}>
-                            <button className={styles.btnDelay}>
+                            <button
+                              className={styles.btnDelay}
+                              onClick={() => setIsOpenModal(note.id)}
+                            >
                               Отложить
                             </button>
-                            <button className={styles.btnDone} onClick={() => toggleNoteComplete(note.id)}>Сделано</button>
+                            <button
+                              className={styles.btnDone}
+                              onClick={() => toggleNoteComplete(note.id)}
+                            >
+                              Сделано
+                            </button>
                           </div>
                         )}
                       </div>
@@ -218,6 +245,38 @@ export const NotesPage = () => {
           ))}
         </div>
       </div>
+
+      <Modal
+        title="Перенести срок выполнения"
+        onOk={handleUpdatedNote}
+        onCancel={() => {
+          setIsOpenModal(null);
+          setNewDeadline(null);
+        }}
+        okText="Перенести"
+        cancelText="Отмена"
+        centered
+        // Модалка открывается, если в стейте лежит ID карточки
+        open={!!isOpenModal}
+      >
+        <div className="pt-3 pb-2">
+          <p className="text-xs text-gray-400 font-medium mb-2">
+            Выберите новую дату дедлайна:
+          </p>
+          <DatePicker
+            format="DD.MM.YYYY"
+            className="w-full rounded-xl h-10"
+            placeholder="Новая дата"
+            allowClear={false}
+            value={newDeadline}
+            onChange={(date) => setNewDeadline(date)}
+            // Запрещаем выбирать даты из прошлого
+            disabledDate={(current) =>
+              current && current < dayjs().endOf("day")
+            }
+          />
+        </div>
+      </Modal>
     </div>
   );
 };

@@ -10,16 +10,38 @@ import {
   DatePicker,
   Form,
   Input,
+  message,
   Popconfirm,
   Radio,
 } from "antd";
 import dayjs from "dayjs";
 import { useAppStore } from "../store/useAppStore";
 import styles from "./Notes.module.css";
+import type { Note } from "../types";
 
 export const NotesPage = () => {
   const notes = useAppStore((state) => state.notes);
+  const addNote = useAppStore((state) => state.addNote);
+  const deleteNote = useAppStore((state) => state.deleteNote);
+  const toggleNoteComplete = useAppStore((state) => state.toggleNoteComplete);
+
   const [form] = Form.useForm();
+
+  const handleFormSubmit = (values: any) => {
+
+    const noteData: Omit<Note, "id" | "completed" | "createdAt" | "completedAt"> = {
+      text: values.text,
+      priority: values.priority,
+      deadline: values.deadline
+        ? values.deadline.format("YYYY-MM-DD")
+        : undefined,
+    };
+
+    addNote(noteData);
+    message.success("Заметка добавлена!");
+
+    form.resetFields();
+  };
 
   return (
     <div className="h-full flex flex-col gap-6 overflow-hidden">
@@ -31,6 +53,7 @@ export const NotesPage = () => {
           initialValues={{ priority: "medium" }}
           className="flex justify-between"
           size="large"
+          onFinish={handleFormSubmit}
         >
           <div className="flex">
             <Form.Item
@@ -118,6 +141,7 @@ export const NotesPage = () => {
                           title="Удалить заметку?"
                           description="Вы уверены, что хотите стереть напоминание?"
                           okText="Да, удалить"
+                          onConfirm={() => deleteNote(note.id)}
                           cancelText="Отмена"
                         >
                           <button className={styles.deleteBtn}>
@@ -183,7 +207,7 @@ export const NotesPage = () => {
                             <button className={styles.btnDelay}>
                               Отложить
                             </button>
-                            <button className={styles.btnDone}>Сделано</button>
+                            <button className={styles.btnDone} onClick={() => toggleNoteComplete(note.id)}>Сделано</button>
                           </div>
                         )}
                       </div>

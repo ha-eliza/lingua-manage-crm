@@ -1,5 +1,6 @@
 import {
   BookOutlined,
+  DeleteOutlined,
   FileTextOutlined,
   GlobalOutlined,
   PlaySquareOutlined,
@@ -9,11 +10,35 @@ import {
   SoundOutlined,
   VideoCameraOutlined,
 } from "@ant-design/icons";
-import { Button, Input, Select, Tag } from "antd";
+import { Button, Form, Input, message, Modal, Popconfirm, Select, Tag } from "antd";
 import { useAppStore } from "../store/useAppStore";
+import { useState } from "react";
+import type { Material } from "../types";
 
 export const MaterialsPage = () => {
   const materials = useAppStore((state) => state.materials);
+  const addMaterial = useAppStore((state) => state.addMaterial);
+  const deleteMaterial = useAppStore((state) => state.deleteMaterial);
+
+  const [isOpenModal, setIsOpenModal] = useState(false);
+  const [form] = Form.useForm();
+
+  const handleFormSubmit = (value: any) => {
+    const materialData: Omit<Material, "id"> = {
+      title: value.title,
+      description: value.description,
+      level: value.level,
+      type: value.type,
+      link: value.link,
+    };
+
+    addMaterial(materialData);
+    message.success("Материал добавлен!");
+
+    setIsOpenModal(false);
+    form.resetFields();
+  };
+
   return (
     <div className="h-full flex flex-col gap-6">
       {/* Панель фильтров */}
@@ -37,7 +62,11 @@ export const MaterialsPage = () => {
           />
         </div>
 
-        <Button type="primary" icon={<PlusOutlined />}>
+        <Button
+          type="primary"
+          icon={<PlusOutlined />}
+          onClick={() => setIsOpenModal(true)}
+        >
           Добавить материал
         </Button>
       </div>
@@ -87,12 +116,107 @@ export const MaterialsPage = () => {
                   <Tag color={tagColor} className="text-base! font-bold">
                     {material.level}
                   </Tag>
+                  <Popconfirm
+                    title="Удалить заметку?"
+                    description="Вы уверены, что хотите стереть напоминание?"
+                    okText="Да, удалить"
+                    onConfirm={() => deleteMaterial(material.id)} // удаление
+                    cancelText="Отмена"
+                  >
+                    <Button type="text" danger icon={<DeleteOutlined />} />
+                  </Popconfirm>
                 </div>
               </div>
             );
           })}
         </div>
       </div>
+      {/* Создание материала */}
+      <Modal
+        title="Добавить новый учебный материал"
+        open={isOpenModal}
+        onCancel={() => setIsOpenModal(false)}
+        footer={null}
+        centered
+      >
+        <Form
+          form={form}
+          layout="vertical"
+          onFinish={handleFormSubmit}
+          className="pt-4"
+          size="large"
+        >
+          <Form.Item
+            name="title"
+            label="Название пособия"
+            rules={[{ required: true, message: "Введите название!" }]}
+          >
+            <Input placeholder="Например: English Grammar in Use" />
+          </Form.Item>
+          <div className="grid grid-cols-2 gap-3">
+            <Form.Item
+              name="level"
+              label="Целевой уровень"
+              rules={[{ required: true }]}
+            >
+              <Select
+                placeholder="Выбрать"
+                options={[
+                  { value: "All", label: "Для всех" },
+                  { value: "A1", label: "Beginner (A1)" },
+                  { value: "A2", label: "Elementary (A2)" },
+                  { value: "B1", label: "Intermediate (B1)" },
+                  { value: "B2", label: "Upper-Intermediate (B2)" },
+                  { value: "C1", label: "Advanced (C1)" },
+                ]}
+              />
+            </Form.Item>
+            <Form.Item
+              name="type"
+              label="Формат контента"
+              rules={[{ required: true, message: "Выберите формат!" }]}
+            >
+              <Select
+                placeholder="Выбрать"
+                options={[
+                  { value: "book", label: "Книга / Пособие" },
+                  { value: "sb", label: "Student's Book" },
+                  { value: "wb", label: "Workbook" },
+                  { value: "video", label: "Видео-урок" },
+                  { value: "film", label: "Фильм / Сериал" },
+                  { value: "audio", label: "Аудио / Подкаст" },
+                  { value: "test", label: "Интерактивный тест" },
+                ]}
+              />
+            </Form.Item>
+          </div>
+          <Form.Item
+            name="link"
+            label="Ссылка на файл (URL)"
+            rules={[
+              { required: true },
+              { type: "url", message: "Введите корректный URL!" },
+            ]}
+          >
+            <Input placeholder="https://example.com" />
+          </Form.Item>
+          <Form.Item
+            name="description"
+            label="Краткое описание"
+            rules={[{ required: true }]}
+          >
+            <Input.TextArea rows={4} placeholder="Опишите пособие..." />
+          </Form.Item>
+          <Form.Item className="block text-right">
+            <Button className="mr-2" onClick={() => setIsOpenModal(false)}>
+              Отмена
+            </Button>
+            <Button type="primary" htmlType="submit">
+              Сохранить
+            </Button>
+          </Form.Item>
+        </Form>
+      </Modal>
     </div>
   );
 };

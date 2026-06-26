@@ -148,7 +148,7 @@ export const CalendarPage = () => {
                     return (
                       <div
                         key={lesson.id}
-                        className={`border-l-4 p-2 rounded-lg text-xs cursor-pointer${
+                        className={`border-l-4 p-2 rounded-lg text-xs cursor-pointer ${
                           isCompleted
                             ? "bg-linear-to-r from-slate-100 to-indigo-50/30 border-slate-400 opacity-70" // Серые стили для completed
                             : "bg-linear-to-r from-blue-50 to-indigo-50/30 border-blue-500" // Синие стили для обычных

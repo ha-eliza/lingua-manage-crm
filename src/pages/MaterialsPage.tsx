@@ -23,6 +23,10 @@ export const MaterialsPage = () => {
   const [isOpenModal, setIsOpenModal] = useState(false);
   const [form] = Form.useForm();
 
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [selectedLevel, setSelectedLevel] = useState<string | null>(null);
+
+
   const handleFormSubmit = (value: any) => {
     const materialData: Omit<Material, "id"> = {
       title: value.title,
@@ -39,6 +43,20 @@ export const MaterialsPage = () => {
     form.resetFields();
   };
 
+  const filteredMaterials = materials.filter((material) => {
+    // Фильтрация по поисковому запросу (приводим к нижнему регистру для независимости от регистра)
+    const matchesSearch =
+      material.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      material.description.toLowerCase().includes(searchQuery.toLowerCase());
+
+    // Фильтрация по уровню (проверяем первую букву через startsWith)
+    const matchesLevel = selectedLevel
+      ? material.level.startsWith(selectedLevel)
+      : true; // Если уровень не выбран, этот фильтр пропускает все элементы
+
+    // Элемент остается в массиве, только если прошел обе проверки
+    return matchesSearch && matchesLevel;
+  });
   return (
     <div className="h-full flex flex-col gap-6">
       {/* Панель фильтров */}
@@ -49,16 +67,22 @@ export const MaterialsPage = () => {
             prefix={<SearchOutlined className="text-gray-400" />}
             className="max-w-md"
             allowClear
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
           />
           <Select
             placeholder="Уровень..."
             className="w-48"
             allowClear
             options={[
+              {value: "", label: "Показать все"},
+              {value: "All", label: "All"},
               { value: "A", label: "Beginner (A)" },
               { value: "B", label: "Intermediate (B)" },
               { value: "C", label: "Advanced (C)" },
             ]}
+            value={selectedLevel}
+            onChange={(value) => setSelectedLevel(value)}
           />
         </div>
 
@@ -74,7 +98,7 @@ export const MaterialsPage = () => {
       {/* Список материалов */}
       <div className="overflow-y-auto pr-1 custom-scrollbar">
         <div className="flex flex-col gap-4">
-          {materials.map((material) => {
+          {filteredMaterials.map((material) => {
             // Цвета для иконок
             const iconMapping = {
               book: <BookOutlined className="text-blue-500!" />,

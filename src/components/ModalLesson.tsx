@@ -12,6 +12,8 @@ import {
 import dayjs, { Dayjs } from "dayjs";
 import { DeleteOutlined } from "@ant-design/icons";
 import { type Lesson, type Student } from "../types/index";
+import { useAuthStore } from "../store/useAuthStore";
+import type { LessonFormValues } from "../pages/CalendarPage";
 
 interface ModalFormProps {
   isOpen: boolean;
@@ -20,7 +22,7 @@ interface ModalFormProps {
   selectedDate: Dayjs | null;
   setSelectedDate: (date: Dayjs | null) => void;
   students: Student[];
-  onSave: (values: Omit<Lesson, "id">) => void;
+  onSave: (values: LessonFormValues) => void;
   onDelete: () => void;
   form: FormInstance;
 }
@@ -36,13 +38,15 @@ export const ModalLesson: React.FC<ModalFormProps> = ({
   onDelete,
   form,
 }) => {
+  const userRole = useAuthStore((state) => state.userRole);
+  const isTeacher = userRole === 'teacher';
   return (
     <Modal
       open={isOpen}
       onCancel={onClose}
       footer={null}
       centered
-      destroyOnClose
+      destroyOnHidden
       className="rounded-2xl"
       title={
         <span className="text-xl font-bold text-gray-800">
@@ -74,9 +78,9 @@ export const ModalLesson: React.FC<ModalFormProps> = ({
               format="DD.MM.YYYY"
               placeholder="Выбрать дату"
               allowClear={false}
-              variant="none"
+              disabled={!isTeacher}
               value={selectedDate}
-              className="p-0! font-extrabold text-blue-600! cursor-pointer w-full"
+              className="p-0! font-extrabold bg-transparent! border-0! text-blue-600! cursor-pointer w-full"
               onChange={(date) => {
                 if (date) {
                   setSelectedDate(date);
@@ -90,10 +94,10 @@ export const ModalLesson: React.FC<ModalFormProps> = ({
         {/* Выбор студента */}
         <Form.Item
           name="studentId"
-          label="Выберите студента"
+          label="Cтудент"
           rules={[{ required: true, message: "Пожалуйста, выберите ученика!" }]}
         >
-          <Select placeholder="Поиск студента...">
+          <Select disabled={!isTeacher} placeholder="Поиск студента...">
             {students
               .filter((student) => student.status === "active")
               .map((student) => (
@@ -113,6 +117,7 @@ export const ModalLesson: React.FC<ModalFormProps> = ({
             className="w-full"
             placeholder="Выбрать время"
             hideDisabledOptions
+            disabled={!isTeacher}
           />
         </Form.Item>
 
@@ -122,40 +127,43 @@ export const ModalLesson: React.FC<ModalFormProps> = ({
           label="Тема урока"
           rules={[{ required: true, message: "Введите тему!" }]}
         >
-          <Input placeholder="Грамматика Present Perfect" />
+          <Input placeholder="Грамматика Present Perfect" disabled={!isTeacher}/>
         </Form.Item>
         {/* Домашнее задание */}
         <Form.Item name="homework" label="Домашнее задание">
           <Input.TextArea
             rows={3}
-            placeholder="Введите текст задания для студента..."
+            disabled={!isTeacher}
           />
         </Form.Item>
 
-        {/* Кнопки управления */}
-        <Form.Item>
-          <div className="flex justify-between items-center w-full">
-            {editingLesson ? (
-              <Button
-                danger
-                type="text"
-                icon={<DeleteOutlined />}
-                onClick={onDelete}
-              >
-                Удалить занятие
-              </Button>
-            ) : (
-              <div />
-            )}
+        {isTeacher && <>
+          {/* Кнопки управления */}
+            <Form.Item>
+              <div className="flex justify-between items-center w-full">
+                {editingLesson ? (
+                  <Button
+                    danger
+                    type="text"
+                    icon={<DeleteOutlined />}
+                    onClick={onDelete}
+                  >
+                    Удалить занятие
+                  </Button>
+                ) : (
+                  <div />
+                )}
 
-            <div className="flex gap-2">
-              <Button onClick={onClose}>Отмена</Button>
-              <Button type="primary" htmlType="submit">
-                {editingLesson ? "Сохранить изменения" : "Создать"}
-              </Button>
-            </div>
-          </div>
-        </Form.Item>
+                <div className="flex gap-2">
+                  <Button onClick={onClose}>Отмена</Button>
+                  <Button type="primary" htmlType="submit">
+                    {editingLesson ? "Сохранить изменения" : "Создать"}
+                  </Button>
+                </div>
+              </div>
+            </Form.Item>
+        </>}
+
       </Form>
     </Modal>
   );

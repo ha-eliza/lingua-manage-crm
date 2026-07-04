@@ -46,6 +46,8 @@ export interface Note {
   createdAt: string;
   deadline?: string;
   completedAt?: string;
+  userId: string; // ID пользователя, который создал заметку
+  createdBy: string; // от кого
 }
 
 export interface Material {

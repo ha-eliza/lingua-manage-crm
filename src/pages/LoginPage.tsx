@@ -1,17 +1,15 @@
 import { useNavigate } from "react-router";
-import { useAppStore } from "../store/useAppStore";
 import { Alert, Button, Input, message } from "antd";
 import { LockOutlined, UserOutlined } from "@ant-design/icons";
 import { useState } from "react";
 import { useAuthStore } from "../store/useAuthStore";
-import { mockTeacher } from "../types/mockData";
+import { collection, doc, getDoc, getDocs, query, where } from "firebase/firestore";
+import { db } from "../firebase";
 
 export const LoginPage: React.FC = () => {
   const navigate = useNavigate();
 
-  // Забираем актуальный список студентов из useAppStore
-  const students = useAppStore((state) => state.students);
-  // Забираем вошедшего пользователя из useAuthStore
+  // Забираем метод сохранения вошедшего пользователя из useAuthStore
   const setCurrentUser = useAuthStore((state) => state.setCurrentUser);
 
   const [login, setLogin] = useState("");
@@ -19,7 +17,7 @@ export const LoginPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.SubmitEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError(null);
 
@@ -30,23 +28,42 @@ export const LoginPage: React.FC = () => {
 
     setLoading(true);
 
-    setTimeout(() => {
+    try {
       let loggedUser = null;
 
-      // 1. Проверяем не преподаватель ли это (т.к преподаватель 1)
-      if (mockTeacher.email === login.trim() && mockTeacher.password === password) {
-        loggedUser = mockTeacher;
+      // 1. Проверяем преподавателя в Firestore по email и паролю
+      const teacherRef = doc(db, "teachers", "t1");
+      const teacherSnap = await getDoc(teacherRef);
+
+      if (teacherSnap.exists()) {
+        const teacherData = teacherSnap.data();
+        if (
+          teacherData.email === login.trim() &&
+          teacherData.password === password
+        ) {
+          loggedUser = { id: teacherSnap.id, ...teacherData };
+        }
       }
 
-      // 2. Если не учитель, используем метод .find() для поиска студента в массиве из Zustand (т.к планируется добавлять студентов)
+      // 2. Если не учитель, ищем студента в Firestore по логину и паролю
       if (!loggedUser) {
-        const student = students.find(
-          (s) => s.login.login === login.trim() && s.login.password === password
+        const studentsRef = collection(db, "students");
+        // Делаем точечный запрос в базу данных
+        const q = query(
+          studentsRef,
+          where("login.login", "==", login.trim()),
+          where("login.password", "==", password),
         );
-        if (student) loggedUser = student;
+
+        const querySnapshot = await getDocs(q);
+
+        if (!querySnapshot.empty) {
+          const studentDoc = querySnapshot.docs[0];
+          loggedUser = { id: studentDoc.id, ...studentDoc.data() };
+        }
       }
 
-      // 3. Если пользователь найден — сохраняем его в сессию и делаем редирект
+      // 3. Если пользователь найден — сохраняем его в Zustand и делаем редирект
       if (loggedUser) {
         setCurrentUser(loggedUser); // Записываем в useAuthStore
         message.success(`Добро пожаловать, ${loggedUser.name}!`);
@@ -54,16 +71,21 @@ export const LoginPage: React.FC = () => {
       } else {
         setError("Неверный логин или пароль");
       }
+    } catch (err) {
+      console.error("Ошибка при авторизации:", err);
+      setError("Произошла ошибка при подключении к серверу");
+    } finally {
       setLoading(false);
-    }, 800);
+    }
   };
   return (
-    <div className="min-h-screen w-screen flex items-center justify-center bg-[var(--color-brand-bg)] px-4">
+    <div className="min-h-screen w-screen flex items-center justify-center bg-brand-bg px-4">
       <div className="max-w-md w-full bg-white p-8 rounded-2xl border border-gray-200 shadow-sm">
         {/* Логотип и заголовок */}
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-[var(--color-brand-text)] tracking-tight flex gap-5 items-end justify-center">
-            <img className="w-10" src="../../public/icon.png" alt="" /> <span>LinguaManage</span>
+          <h1 className="text-3xl font-bold text-brand-text tracking-tight flex gap-5 items-end justify-center">
+            <img className="w-10" src="../../public/icon.png" alt="" />{" "}
+            <span>LinguaManage</span>
           </h1>
           <p className="text-sm text-gray-500 mt-2">
             Вход в систему управления обучением
@@ -72,12 +94,7 @@ export const LoginPage: React.FC = () => {
 
         {/* Вывод ошибки валидации */}
         {error && (
-          <Alert
-            message={error}
-            type="error"
-            showIcon
-            className="mb-3!"
-          />
+          <Alert message={error} type="error" showIcon className="mb-3!" />
         )}
 
         {/* Форма авторизации */}
@@ -112,7 +129,7 @@ export const LoginPage: React.FC = () => {
             type="primary"
             htmlType="submit"
             loading={loading}
-            className="w-full font-semibold! bg-[var(--color-brand-primary)]! mt-2"
+            className="w-full font-semibold! bg-brand-primary! mt-2"
           >
             Войти в систему
           </Button>

@@ -12,22 +12,36 @@ import {
 } from "@ant-design/icons";
 import { Button, Form, Input, message, Modal, Popconfirm, Select, Tag } from "antd";
 import { useAppStore } from "../store/useAppStore";
-import { useState } from "react";
-import type { Material } from "../types";
+import { useEffect, useState } from "react";
+import type { EnglishLevel, Material, MaterialType } from "../types";
+import { useAuthStore } from "../store/useAuthStore";
+
+interface MaterialFormValues {
+  title: string;
+  description: string;
+  level: EnglishLevel;
+  type: MaterialType;
+  link: string;
+}
 
 export const MaterialsPage = () => {
   const materials = useAppStore((state) => state.materials);
   const addMaterial = useAppStore((state) => state.addMaterial);
   const deleteMaterial = useAppStore((state) => state.deleteMaterial);
-
+  const fetchMaterials = useAppStore((state) => state.fetchMaterials)
   const [isOpenModal, setIsOpenModal] = useState(false);
   const [form] = Form.useForm();
-
+  const userRole = useAuthStore((state) => state.userRole);
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [selectedLevel, setSelectedLevel] = useState<string | null>(null);
 
+  const isTeacher = userRole === 'teacher';
 
-  const handleFormSubmit = (value: any) => {
+  useEffect(() => {
+    fetchMaterials()
+  }, [])
+
+  const handleFormSubmit = (value: MaterialFormValues) => {
     const materialData: Omit<Material, "id"> = {
       title: value.title,
       description: value.description,
@@ -86,13 +100,15 @@ export const MaterialsPage = () => {
           />
         </div>
 
-        <Button
+        {isTeacher && <Button
           type="primary"
           icon={<PlusOutlined />}
           onClick={() => setIsOpenModal(true)}
         >
           Добавить материал
         </Button>
+        }
+
       </div>
 
       {/* Список материалов */}
@@ -116,7 +132,10 @@ export const MaterialsPage = () => {
             if (material.level.startsWith("C")) tagColor = "purple";
 
             return (
-              <div
+              <a
+                href={material.link}
+                target="_blank" // Открывает в новой вкладке (уберите, если нужно в текущей)
+                rel="noopener noreferrer"
                 key={material.id}
                 className="p-5 border-b border-gray-100 transition-all duration-200 hover:bg-slate-50/60 hover:shadow-xs cursor-pointer group"
               >
@@ -140,7 +159,7 @@ export const MaterialsPage = () => {
                   <Tag color={tagColor} className="text-base! font-bold">
                     {material.level}
                   </Tag>
-                  <Popconfirm
+                  {isTeacher && <Popconfirm
                     title="Удалить заметку?"
                     description="Вы уверены, что хотите стереть напоминание?"
                     okText="Да, удалить"
@@ -149,8 +168,9 @@ export const MaterialsPage = () => {
                   >
                     <Button type="text" danger icon={<DeleteOutlined />} />
                   </Popconfirm>
+                  }
                 </div>
-              </div>
+              </a>
             );
           })}
         </div>

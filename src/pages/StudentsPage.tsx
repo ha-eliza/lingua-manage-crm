@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Table, Button, Modal, Form, Input, Select, message } from "antd";
 import { PlusOutlined, SearchOutlined, UserOutlined } from "@ant-design/icons";
 import { useAppStore } from "../store/useAppStore";
@@ -12,11 +12,15 @@ export const StudentsPage: React.FC = () => {
   const students = useAppStore((state) => state.students);
   const addStudent = useAppStore((state) => state.addStudent);
   const deleteStudent = useAppStore((state) => state.deleteStudent);
-
+  const fetchStudents = useAppStore((state) => state.fetchStudents);
   // Стейты для модального окна
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [form] = Form.useForm();
+
+  useEffect(() => {
+    fetchStudents()
+  }, [])
 
   // 2. Колонки таблицы
   const columns = getStudentsColumns({ deleteStudent, navigate });

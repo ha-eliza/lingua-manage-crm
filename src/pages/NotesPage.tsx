@@ -15,11 +15,18 @@ import {
   Popconfirm,
   Radio,
 } from "antd";
-import dayjs from "dayjs";
+import dayjs, { Dayjs } from "dayjs";
 import { useAppStore } from "../store/useAppStore";
 import styles from "./Notes.module.css";
 import type { Note } from "../types";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useAuthStore } from "../store/useAuthStore";
+
+interface NoteFormValues {
+  text: string;
+  priority: 'low' | 'medium' | 'high';
+  deadline?: Dayjs | null;
+}
 
 export const NotesPage = () => {
   const notes = useAppStore((state) => state.notes);
@@ -27,12 +34,18 @@ export const NotesPage = () => {
   const deleteNote = useAppStore((state) => state.deleteNote);
   const toggleNoteComplete = useAppStore((state) => state.toggleNoteComplete);
   const updatedNote = useAppStore((state) => state.updatedNote);
+  const fetchNotes = useAppStore((state) => state.fetchNotes)
+  const currentUser = useAuthStore((state) => state.currentUser)
+  
+  useEffect(() => {
+    fetchNotes(); // Стягиваем данные из Firebase при монтировании
+  }, []);
 
   const [form] = Form.useForm();
   const [isOpenModal, setIsOpenModal] = useState<string | null>(null); // хранит строку с идентификатором задачи
   const [newDeadline, setNewDeadline] = useState<dayjs.Dayjs | null>(null); // хранит ту дату, которую выбрал пользователь
 
-  const handleFormSubmit = (values: any) => {
+  const handleFormSubmit = (values: NoteFormValues) => {
 
     const noteData: Omit<Note, "id" | "completed" | "createdAt" | "completedAt"> = {
       text: values.text,
@@ -40,6 +53,8 @@ export const NotesPage = () => {
       deadline: values.deadline
         ? values.deadline.format("YYYY-MM-DD")
         : undefined,
+      userId: currentUser?.id || "",
+      createdBy: currentUser?.name || "Неизвестный автор",
     };
 
     addNote(noteData);
@@ -61,6 +76,9 @@ export const NotesPage = () => {
       message.warning("Пожалуйста, выберите дату!");
     }
   };
+
+  // Оставляем только точное сравнение по полю .id
+  const myNotes = notes.filter((note) => note.userId === currentUser?.id);
 
   return (
     <div className="h-full flex flex-col gap-6 overflow-hidden">
@@ -107,7 +125,7 @@ export const NotesPage = () => {
         <div className="grid grid-cols-3 gap-4">
           {[0, 1, 2].map((columnIndex) => (
             <div key={columnIndex} className="flex flex-col gap-4">
-              {notes
+              {myNotes
                 .filter((_, index) => index % 3 === columnIndex)
                 .map((note) => {
                   // Определяем ключ приоритета (по умолчанию 'low')

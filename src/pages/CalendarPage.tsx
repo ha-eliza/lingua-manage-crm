@@ -1,22 +1,35 @@
 import { Button, Form, message } from "antd";
 import { useAppStore } from "../store/useAppStore";
 import { LeftOutlined, PlusOutlined, RightOutlined } from "@ant-design/icons";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { Dayjs } from "dayjs";
 import dayjs from "dayjs";
 import "dayjs/locale/ru";
-import type { Lesson } from "../types";
+import type { Lesson, LessonStatus } from "../types";
 import { ModalLesson } from "../components/ModalLesson";
+import { useAuthStore } from "../store/useAuthStore";
 
 // Переводим даты на русский
 dayjs.locale("ru");
+
+export interface LessonFormValues {
+  studentId: string;
+  date: Dayjs;
+  time: Dayjs;
+  topic: string;
+  homework?: string;
+  status?: LessonStatus;
+}
 
 export const CalendarPage = () => {
   // 1. Забираем данные из Zustand
   const lessons = useAppStore((state) => state.lessons);
   const students = useAppStore((state) => state.students);
+  const currentUser = useAuthStore((state) => state.currentUser);
+  const userRole = useAuthStore((state) => state.userRole);
 
   // Забираем функции
+  const fetchLessons = useAppStore((state) => state.fetchLessons);
   const addLesson = useAppStore((state) => state.addLesson);
   const editLesson = useAppStore((state) => state.editLesson);
   const deleteLesson = useAppStore((state) => state.deleteLesson);
@@ -27,6 +40,10 @@ export const CalendarPage = () => {
   const [editingLesson, setEditingLesson] = useState<Lesson | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+  useEffect(() => {
+    fetchLessons(); // Вызываем загрузку из Firebase при заходе на страницу
+  }, []);
+
   // 2. Настраиваем недели
   const [currentWeekStart, setCurrentWeekStart] = useState<Dayjs>(
     dayjs().startOf("week"),
@@ -35,7 +52,7 @@ export const CalendarPage = () => {
     currentWeekStart.add(i, "day"),
   );
 
-  const handleFormSubmit = (values: any) => {
+  const handleFormSubmit = (values: LessonFormValues) => {
     const lessonData: Omit<Lesson, "id"> = {
       studentId: values.studentId,
       date: values.date.format("YYYY-MM-DD"),
@@ -86,6 +103,17 @@ export const CalendarPage = () => {
       message.success("Занятие удалено");
     }
   };
+
+  const isTeacher = userRole === 'teacher';
+
+  const visibleLessons = lessons.filter((lesson) => {
+    // Если зашел Преподаватель - он видит абсолютно все уроки
+    if (currentUser?.id === "t1") return true;
+
+    // Студенты видят только те уроки, где их id совпадает со studentId урока
+    return lesson.studentId === currentUser?.id;
+  });
+
   return (
     <div className="h-full flex flex-col gap-4 overflow-hidden">
       {/* Шапка */}
@@ -105,20 +133,21 @@ export const CalendarPage = () => {
             onClick={() => setCurrentWeekStart(currentWeekStart.add(1, "week"))} // следущая неделя
           />
         </div>
-        <Button
+        {isTeacher && <Button
           type="primary"
           icon={<PlusOutlined />}
           onClick={() => setIsModalOpen(true)}
         >
           Добавить занятие
         </Button>
+        }
       </div>
 
       {/* Сетка на 7 колонок */}
       <div className="grid grid-cols-7 gap-3 flex-1 h-[calc(100vh-250px)]">
         {weekDays.map((day) => {
           const dateStr = day.format("YYYY-MM-DD");
-          const dayLessons = lessons.filter((l) => l.date === dateStr);
+          const dayLessons = visibleLessons.filter((l) => l.date === dateStr);
           const isToday = day.isSame(dayjs(), "day");
 
           return (
@@ -169,7 +198,7 @@ export const CalendarPage = () => {
                   })}
               </div>
 
-              <button
+              {isTeacher && <button
                 className="m-2 p-1.5 border border-dashed border-gray-200 rounded-lg text-xs text-gray-400 cursor-pointer"
                 onClick={() => {
                   // Устанавливаем дату дня, на который кликнули
@@ -179,6 +208,7 @@ export const CalendarPage = () => {
               >
                 + Назначить
               </button>
+              }
             </div>
           );
         })}

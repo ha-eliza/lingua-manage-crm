@@ -115,7 +115,7 @@ export const StudentProfilePage: React.FC = () => {
             {student.name.charAt(0).toUpperCase()}
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-[var(--color-brand-text)]">
+            <h1 className="text-2xl font-bold text-brand-text">
               {student.name}
             </h1>
             <p className="text-sm text-gray-500">{student.email}</p>
@@ -218,10 +218,10 @@ export const StudentProfilePage: React.FC = () => {
 
       {/* КАРТОЧКА С ДОСТУПАМИ ДЛЯ ВХОДА */}
       <div className="bg-[#EFF6FF] border border-[#BFDBFE] p-5 rounded-xl">
-        <h3 className="mb-3 flex items-center gap-2 text-[var(--color-brand-text)] font-semibold">
+        <h3 className="mb-3 flex items-center gap-2 text-brand-text font-semibold">
           <KeyOutlined /> Учетные данные для входа студента
         </h3>
-        <p className="text-[var(--color-brand-text)] text-[13px] mb-2">
+        <p className="text-brand-text text-[13px] mb-2">
           Передайте эти данные студенту, чтобы он мог авторизоваться в своем
           личном кабинете со своего устройства.
         </p>
@@ -230,7 +230,7 @@ export const StudentProfilePage: React.FC = () => {
             <span className="block text-[12px] text-[#60A5FA]">
               ЛОГИН
             </span>
-            <strong className="font-mono text-[15px] text-[var(--color-brand-text)]">
+            <strong className="font-mono text-[15px] text-brand-text">
               {student.login.login}
             </strong>
           </div>
@@ -238,7 +238,7 @@ export const StudentProfilePage: React.FC = () => {
             <span className="block text-[12px] text-[#60A5FA]">
               ПАРОЛЬ
             </span>
-            <strong className="font-mono text-[15px] text-[var(--color-brand-text)]">
+            <strong className="font-mono text-[15px] text-brand-text">
               {student.login.password}
             </strong>
           </div>

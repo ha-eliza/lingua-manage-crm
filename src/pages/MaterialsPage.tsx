@@ -168,7 +168,7 @@ export const MaterialsPage = () => {
                       title="Удалить заметку?"
                       description="Вы уверены, что хотите стереть напоминание?"
                       okText="Да, удалить"
-                      onConfirm={(e) => deleteMaterial(material.id)} // удаление
+                      onConfirm={() => deleteMaterial(material.id)} // удаление
                       cancelText="Отмена"
                     >
                       <Button

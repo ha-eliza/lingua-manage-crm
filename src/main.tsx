@@ -11,6 +11,7 @@ import { MaterialsPage } from "./pages/MaterialsPage.tsx";
 import { NotesPage } from "./pages/NotesPage.tsx";
 import { StudentProfilePage } from "./pages/StudentProfilePage.tsx";
 import { ConfigProvider } from "antd";
+import { ProtectedRoute } from "./components/ProtectedRoute.tsx";
 
 const router = createBrowserRouter([
   {
@@ -21,7 +22,11 @@ const router = createBrowserRouter([
   {
     // Внутренняя часть системы
     path: "/",
-    element: <App />, // Layout
+    element: (
+      <ProtectedRoute>
+        <App />
+      </ProtectedRoute>
+    ), // Layout
     children: [
       {
         path: "/dashboard",

@@ -3,6 +3,7 @@ import { useAppStore } from "../store/useAppStore";
 import { useAuthStore } from "../store/useAuthStore";
 import dayjs from "dayjs";
 import { KeyOutlined } from "@ant-design/icons";
+import type { Student, Teacher } from "../types";
 
 export const DashboardPage: React.FC = () => {
   // 1. Забираем данные и функции загрузки из сторов
@@ -15,18 +16,22 @@ export const DashboardPage: React.FC = () => {
   const currentUser = useAuthStore((state) => state.currentUser);
   const userRole = useAuthStore((state) => state.userRole);
 
-  const isTeacher = userRole === 'teacher';
+  const isTeacher = userRole === "teacher";
   // 3. Подгружаем актуальные данные из Firebase при заходе на страницу
   useEffect(() => {
     fetchNotes();
     fetchLessons();
   }, []);
 
-  const currentUserId = currentUser?.id || '';
+  const currentUserId = currentUser?.id || "";
 
   // Горящие заметки (невыполненные заметки)
-  const burningNotes = notes
-    .filter((note) => note.userId === currentUserId && !note.completed && note.priority === 'high')
+  const burningNotes = notes.filter(
+    (note) =>
+      note.userId === currentUserId &&
+      !note.completed &&
+      note.priority === "high",
+  );
 
   // Ближайшие занятия (первые 3 запланированных урока для текущего юзера)
   const upcomingLessons = lessons
@@ -188,13 +193,17 @@ export const DashboardPage: React.FC = () => {
             <div>
               <span className="block text-[12px] text-[#60A5FA]">ЛОГИН</span>
               <strong className="font-mono text-[15px] text-brand-text">
-                {isTeacher ? currentUser?.email : currentUser?.login.login}
+                {isTeacher
+                  ? (currentUser as Teacher)?.email
+                  : (currentUser as Student)?.login.login}
               </strong>
             </div>
             <div>
               <span className="block text-[12px] text-[#60A5FA]">ПАРОЛЬ</span>
               <strong className="font-mono text-[15px] text-brand-text">
-                {isTeacher ? currentUser?.password : currentUser?.login.password}
+                {isTeacher
+                  ? (currentUser as Teacher)?.password
+                  : (currentUser as Student)?.login.password}
               </strong>
             </div>
           </div>

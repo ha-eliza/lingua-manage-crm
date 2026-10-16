@@ -5,6 +5,7 @@ import { useState } from "react";
 import { useAuthStore } from "../store/useAuthStore";
 import { collection, doc, getDoc, getDocs, query, where } from "firebase/firestore";
 import { db } from "../firebase";
+import type { Student, Teacher } from "../types";
 
 export const LoginPage: React.FC = () => {
   const navigate = useNavigate();
@@ -29,7 +30,7 @@ export const LoginPage: React.FC = () => {
     setLoading(true);
 
     try {
-      let loggedUser = null;
+      let loggedUser: Teacher | Student | null = null;
 
       // 1. Проверяем преподавателя в Firestore по email и паролю
       const teacherRef = doc(db, "teachers", "t1");
@@ -41,7 +42,7 @@ export const LoginPage: React.FC = () => {
           teacherData.email === login.trim() &&
           teacherData.password === password
         ) {
-          loggedUser = { id: teacherSnap.id, ...teacherData };
+          loggedUser = { id: teacherSnap.id, ...teacherData } as Teacher;
         }
       }
 
@@ -59,7 +60,7 @@ export const LoginPage: React.FC = () => {
 
         if (!querySnapshot.empty) {
           const studentDoc = querySnapshot.docs[0];
-          loggedUser = { id: studentDoc.id, ...studentDoc.data() };
+          loggedUser = { id: studentDoc.id, ...studentDoc.data() } as Student;
         }
       }
 

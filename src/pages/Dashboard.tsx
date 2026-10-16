@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { useAppStore } from "../store/useAppStore";
 import { useAuthStore } from "../store/useAuthStore";
 import dayjs from "dayjs";
@@ -9,19 +9,12 @@ export const DashboardPage: React.FC = () => {
   // 1. Забираем данные и функции загрузки из сторов
   const notes = useAppStore((state) => state.notes);
   const lessons = useAppStore((state) => state.lessons);
-  const fetchNotes = useAppStore((state) => state.fetchNotes);
-  const fetchLessons = useAppStore((state) => state.fetchLessons);
 
   // 2. Данные пользователя и его роль
   const currentUser = useAuthStore((state) => state.currentUser);
   const userRole = useAuthStore((state) => state.userRole);
 
   const isTeacher = userRole === "teacher";
-  // 3. Подгружаем актуальные данные из Firebase при заходе на страницу
-  useEffect(() => {
-    fetchNotes();
-    fetchLessons();
-  }, []);
 
   const currentUserId = currentUser?.id || "";
 

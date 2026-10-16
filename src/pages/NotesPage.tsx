@@ -19,7 +19,7 @@ import dayjs, { Dayjs } from "dayjs";
 import { useAppStore } from "../store/useAppStore";
 import styles from "./Notes.module.css";
 import type { Note } from "../types";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useAuthStore } from "../store/useAuthStore";
 
 interface NoteFormValues {
@@ -34,12 +34,8 @@ export const NotesPage = () => {
   const deleteNote = useAppStore((state) => state.deleteNote);
   const toggleNoteComplete = useAppStore((state) => state.toggleNoteComplete);
   const updatedNote = useAppStore((state) => state.updatedNote);
-  const fetchNotes = useAppStore((state) => state.fetchNotes)
   const currentUser = useAuthStore((state) => state.currentUser)
-  
-  useEffect(() => {
-    fetchNotes(); // Стягиваем данные из Firebase при монтировании
-  }, []);
+
 
   const [form] = Form.useForm();
   const [isOpenModal, setIsOpenModal] = useState<string | null>(null); // хранит строку с идентификатором задачи
@@ -54,7 +50,6 @@ export const NotesPage = () => {
         ? values.deadline.format("YYYY-MM-DD")
         : undefined,
       userId: currentUser?.id || "",
-      createdBy: currentUser?.name || "Неизвестный автор",
     };
 
     addNote(noteData);

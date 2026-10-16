@@ -1,12 +1,10 @@
 import type { StateCreator } from 'zustand';
 import type { EnglishLevel, Student, StudentStatus } from '../../types';
 import type { AppState } from '../useAppStore';
-import { collection, deleteDoc, doc, getDocs, setDoc } from 'firebase/firestore';
-import { db } from '../../firebase';
+import { USERS } from '../../data/users';
 
 export interface StudentsSlice {
   students: Student[];
-  fetchStudents: () => Promise<void>;
   addStudent: (studentData: Omit<Student, 'id' | 'role' | 'avatarColor' | 'login'>) => void;
   deleteStudent: (id: string) => void;
   updateStudentStatus: (id: string, status: StudentStatus) => void;
@@ -18,17 +16,13 @@ const getRandomColor = () => {
   return colors[Math.floor(Math.random() * colors.length)];
 };
 
-export const createStudentsSlice: StateCreator<AppState, [['zustand/persist', unknown]], [], StudentsSlice> = (set, get) => ({
-  students: [],
+const STUDENTS = USERS.filter((user): user is Student => user.role === 'student')
 
-  fetchStudents: async () => {
-    const querySnapshot = await getDocs(collection(db, "students"));
-    const list = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Student[];
-    set({ students: list });
-  },
+export const createStudentsSlice: StateCreator<AppState, [['zustand/persist', unknown]], [], StudentsSlice> = (set, get) => ({
+  students: STUDENTS,
 
   // Функция добавления
-  addStudent: async (studentData) => {
+  addStudent: (studentData) => {
       const newId = `s_${Date.now()}`;
       const generatedLogin = `student_${newId.slice(-4)}`;
       const generatedPassword = Math.random().toString(36).slice(-6);
@@ -40,40 +34,33 @@ export const createStudentsSlice: StateCreator<AppState, [['zustand/persist', un
         avatarColor: getRandomColor(),
         login: { login: generatedLogin, password: generatedPassword },
       };
-      await setDoc(doc(db, "students", newId), newStudent); // Запись в Firebase
+
       const current = get().students || [];
       set({ students: [...current, newStudent] });
   },
 
   // Функция удаления
-  deleteStudent: async (id) => {
-    await deleteDoc(doc(db, "students", id)); // Удаление из Firebase
+  deleteStudent: (id) => {
     const current = get().students || [];
     set({ students: current.filter((s) => s.id !== id) });
   },
 
   // Функция обновления статуса
-  updateStudentStatus: async (id, status) => {
+  updateStudentStatus: (id, status) => {
     const current = get().students || [];
-    const updatedList = current.map((s) => s.id === id ? { ...s, status } : s);
-    const updatedStudent = updatedList.find(s => s.id === id);
 
-    if (updatedStudent) {
-      await setDoc(doc(db, "students", id), updatedStudent, { merge: true }); // Обновление в Firebase
-      set({ students: updatedList }); // Обновление в Zustand
-    }
+    set({
+      students: current.map((student) => (student.id === id ? { ...student, status } : student))
+    })
   },
 
   // Функция обновления уровня
-  updateStudentLevel: async (id, level) => {
+  updateStudentLevel: (id, level) => {
     const current = get().students || [];
-    const updatedList = current.map((s) => s.id === id ? { ...s, level } : s);
-    const updatedStudent = updatedList.find(s => s.id === id);
 
-    if (updatedStudent) {
-      await setDoc(doc(db, "students", id), updatedStudent, { merge: true }); // Обновление в Firebase
-      set({ students: updatedList }); // Обновление в Zustand
-    }
+    set({
+      students: current.map((student) => (student.id === id ? { ...student, level } : student))
+    })
   },
 
 });

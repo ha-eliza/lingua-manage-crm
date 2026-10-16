@@ -1,7 +1,7 @@
 import { Button, Form, message } from "antd";
 import { useAppStore } from "../store/useAppStore";
 import { LeftOutlined, PlusOutlined, RightOutlined } from "@ant-design/icons";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import type { Dayjs } from "dayjs";
 import dayjs from "dayjs";
 import "dayjs/locale/ru";
@@ -29,7 +29,6 @@ export const CalendarPage = () => {
   const userRole = useAuthStore((state) => state.userRole);
 
   // Забираем функции
-  const fetchLessons = useAppStore((state) => state.fetchLessons);
   const addLesson = useAppStore((state) => state.addLesson);
   const editLesson = useAppStore((state) => state.editLesson);
   const deleteLesson = useAppStore((state) => state.deleteLesson);
@@ -40,9 +39,6 @@ export const CalendarPage = () => {
   const [editingLesson, setEditingLesson] = useState<Lesson | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  useEffect(() => {
-    fetchLessons(); // Вызываем загрузку из Firebase при заходе на страницу
-  }, []);
 
   // 2. Настраиваем недели
   const [currentWeekStart, setCurrentWeekStart] = useState<Dayjs>(
@@ -51,6 +47,9 @@ export const CalendarPage = () => {
   const weekDays = Array.from({ length: 7 }).map((_, i) =>
     currentWeekStart.add(i, "day"),
   );
+
+  const isTeacher = userRole === 'teacher';
+  const visibleLessons = lessons.filter((lesson) => isTeacher || lesson.studentId === currentUser?.id);
 
   const handleFormSubmit = (values: LessonFormValues) => {
     const lessonData: Omit<Lesson, "id"> = {
@@ -72,47 +71,33 @@ export const CalendarPage = () => {
       message.success("Занятие успешно добавлено!");
     }
 
-    // Общие действия для обоих случаев
-    setIsModalOpen(false);
-    setEditingLesson(null); // Сбрасываем стейт редактирования
-    form.resetFields();
+    closeModal()
   };
-
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setEditingLesson(null);
+    setSelectedDate(dayjs())
+    form.resetFields();
+  }
   const openEditModal = (lesson: Lesson) => {
     setEditingLesson(lesson);
     setSelectedDate(dayjs(lesson.date));
     // Заполняем форму Ant Design текущими данными урока
     form.setFieldsValue({
-      studentId: lesson.studentId,
-      topic: lesson.topic,
-      homework: lesson.homework,
-      status: lesson.status,
+      ...lesson,
       date: dayjs(lesson.date),
       time: dayjs(lesson.time, "HH:mm"),
     });
 
     setIsModalOpen(true);
   };
-
   const onDelete = () => {
     if (editingLesson) {
-      deleteLesson(editingLesson.id); // Используем deleteLesson
-      setIsModalOpen(false);
-      setEditingLesson(null);
-      form.resetFields();
+      deleteLesson(editingLesson.id);
       message.success("Занятие удалено");
+      closeModal()
     }
   };
-
-  const isTeacher = userRole === 'teacher';
-
-  const visibleLessons = lessons.filter((lesson) => {
-    // Если зашел Преподаватель - он видит абсолютно все уроки
-    if (currentUser?.id === "t1") return true;
-
-    // Студенты видят только те уроки, где их id совпадает со studentId урока
-    return lesson.studentId === currentUser?.id;
-  });
 
   return (
     <div className="h-full flex flex-col gap-4 overflow-hidden">

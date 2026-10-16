@@ -3,15 +3,13 @@ import { Alert, Button, Input, message } from "antd";
 import { LockOutlined, UserOutlined } from "@ant-design/icons";
 import { useState } from "react";
 import { useAuthStore } from "../store/useAuthStore";
-import { collection, doc, getDoc, getDocs, query, where } from "firebase/firestore";
-import { db } from "../firebase";
-import type { Student, Teacher } from "../types";
 
 export const LoginPage: React.FC = () => {
   const navigate = useNavigate();
 
   // Забираем метод сохранения вошедшего пользователя из useAuthStore
   const setCurrentUser = useAuthStore((state) => state.setCurrentUser);
+  const findUser = useAuthStore((state) => state.findUser);
 
   const [login, setLogin] = useState("");
   const [password, setPassword] = useState("");
@@ -30,54 +28,22 @@ export const LoginPage: React.FC = () => {
     setLoading(true);
 
     try {
-      let loggedUser: Teacher | Student | null = null;
+      const user = findUser(login.trim(), password)
 
-      // 1. Проверяем преподавателя в Firestore по email и паролю
-      const teacherRef = doc(db, "teachers", "t1");
-      const teacherSnap = await getDoc(teacherRef);
-
-      if (teacherSnap.exists()) {
-        const teacherData = teacherSnap.data();
-        if (
-          teacherData.email === login.trim() &&
-          teacherData.password === password
-        ) {
-          loggedUser = { id: teacherSnap.id, ...teacherData } as Teacher;
-        }
-      }
-
-      // 2. Если не учитель, ищем студента в Firestore по логину и паролю
-      if (!loggedUser) {
-        const studentsRef = collection(db, "students");
-        // Делаем точечный запрос в базу данных
-        const q = query(
-          studentsRef,
-          where("login.login", "==", login.trim()),
-          where("login.password", "==", password),
-        );
-
-        const querySnapshot = await getDocs(q);
-
-        if (!querySnapshot.empty) {
-          const studentDoc = querySnapshot.docs[0];
-          loggedUser = { id: studentDoc.id, ...studentDoc.data() } as Student;
-        }
-      }
-
-      // 3. Если пользователь найден — сохраняем его в Zustand и делаем редирект
-      if (loggedUser) {
-        setCurrentUser(loggedUser); // Записываем в useAuthStore
-        message.success(`Добро пожаловать, ${loggedUser.name}!`);
-        navigate("/dashboard"); // Перенаправляем в личный кабинет
+      if (user) {
+        setCurrentUser(user)
+        message.success(`Добро пожаловать, ${user.name}!`)
+        navigate('/dashboard')
       } else {
-        setError("Неверный логин или пароль");
+        setError('Неверный логин или пароль')
       }
     } catch (err) {
-      console.error("Ошибка при авторизации:", err);
-      setError("Произошла ошибка при подключении к серверу");
+      console.error('Ошибка при авторизации: ', err)
+      setError('Произошла ошибка')
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
+
   };
   return (
     <div className="min-h-screen w-screen flex items-center justify-center bg-brand-bg px-4">

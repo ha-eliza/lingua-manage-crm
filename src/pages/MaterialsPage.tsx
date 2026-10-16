@@ -10,9 +10,18 @@ import {
   SoundOutlined,
   VideoCameraOutlined,
 } from "@ant-design/icons";
-import { Button, Form, Input, message, Modal, Popconfirm, Select, Tag } from "antd";
+import {
+  Button,
+  Form,
+  Input,
+  message,
+  Modal,
+  Popconfirm,
+  Select,
+  Tag,
+} from "antd";
 import { useAppStore } from "../store/useAppStore";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import type { EnglishLevel, Material, MaterialType } from "../types";
 import { useAuthStore } from "../store/useAuthStore";
 
@@ -28,18 +37,13 @@ export const MaterialsPage = () => {
   const materials = useAppStore((state) => state.materials);
   const addMaterial = useAppStore((state) => state.addMaterial);
   const deleteMaterial = useAppStore((state) => state.deleteMaterial);
-  const fetchMaterials = useAppStore((state) => state.fetchMaterials)
   const [isOpenModal, setIsOpenModal] = useState(false);
   const [form] = Form.useForm();
   const userRole = useAuthStore((state) => state.userRole);
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [selectedLevel, setSelectedLevel] = useState<string | null>(null);
 
-  const isTeacher = userRole === 'teacher';
-
-  useEffect(() => {
-    fetchMaterials()
-  }, [])
+  const isTeacher = userRole === "teacher";
 
   const handleFormSubmit = (value: MaterialFormValues) => {
     const materialData: Omit<Material, "id"> = {
@@ -89,8 +93,8 @@ export const MaterialsPage = () => {
             className="w-48"
             allowClear
             options={[
-              {value: "", label: "Показать все"},
-              {value: "All", label: "All"},
+              { value: "", label: "Показать все" },
+              { value: "All", label: "All" },
               { value: "A", label: "Beginner (A)" },
               { value: "B", label: "Intermediate (B)" },
               { value: "C", label: "Advanced (C)" },
@@ -100,15 +104,15 @@ export const MaterialsPage = () => {
           />
         </div>
 
-        {isTeacher && <Button
-          type="primary"
-          icon={<PlusOutlined />}
-          onClick={() => setIsOpenModal(true)}
-        >
-          Добавить материал
-        </Button>
-        }
-
+        {isTeacher && (
+          <Button
+            type="primary"
+            icon={<PlusOutlined />}
+            onClick={() => setIsOpenModal(true)}
+          >
+            Добавить материал
+          </Button>
+        )}
       </div>
 
       {/* Список материалов */}
@@ -159,16 +163,25 @@ export const MaterialsPage = () => {
                   <Tag color={tagColor} className="text-base! font-bold">
                     {material.level}
                   </Tag>
-                  {isTeacher && <Popconfirm
-                    title="Удалить заметку?"
-                    description="Вы уверены, что хотите стереть напоминание?"
-                    okText="Да, удалить"
-                    onConfirm={() => deleteMaterial(material.id)} // удаление
-                    cancelText="Отмена"
-                  >
-                    <Button type="text" danger icon={<DeleteOutlined />} />
-                  </Popconfirm>
-                  }
+                  {isTeacher && (
+                    <Popconfirm
+                      title="Удалить заметку?"
+                      description="Вы уверены, что хотите стереть напоминание?"
+                      okText="Да, удалить"
+                      onConfirm={(e) => deleteMaterial(material.id)} // удаление
+                      cancelText="Отмена"
+                    >
+                      <Button
+                        type="text"
+                        danger
+                        icon={<DeleteOutlined />}
+                        onClick={(e) => {
+                          e.preventDefault(); // не переходим по ссылке
+                          e.stopPropagation(); // не всплываем
+                        }}
+                      />
+                    </Popconfirm>
+                  )}
                 </div>
               </a>
             );
